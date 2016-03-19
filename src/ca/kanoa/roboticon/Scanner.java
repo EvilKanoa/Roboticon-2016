@@ -66,8 +66,14 @@ public class Scanner {
 		return read() != Color.WHITE;
 	}
 
-	public Direction getOpenDirection() { 
+	public Direction getOpenDirection(int horizontal) { 
 		int leftAngle, rightAngle;
+		
+		if (horizontal > 32) {
+			return Direction.RIGHT;
+		} else if (horizontal < -32) {
+			return Direction.LEFT;
+		}
 		
 		motor.forward();
 		while(motor.getTachoCount() < (rangeOfMotion - REVERSE_RANGE) && isObstacle());

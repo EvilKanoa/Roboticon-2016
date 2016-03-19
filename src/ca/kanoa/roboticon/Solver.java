@@ -6,6 +6,7 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
+import lejos.hardware.Button;
 
 public class Solver {
 
@@ -14,6 +15,7 @@ public class Solver {
 	private Thread exitListener;
 	private Logger logger;
 	private ObstacleNavigator navigator;
+	
 
 	public Solver() {
 		logger = new Logger(Level.DEBUG, false);
@@ -27,7 +29,9 @@ public class Solver {
 	private void start() {
 		exitListener.setDaemon(true);
 		exitListener.start();
-		
+
+		logger.info("press to start");
+		while (Button.ENTER.isUp());
 		navigator.start();
 	}
 	

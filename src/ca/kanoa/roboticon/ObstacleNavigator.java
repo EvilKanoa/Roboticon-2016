@@ -1,5 +1,6 @@
 package ca.kanoa.roboticon;
 
+import ca.kanoa.roboticon.utility.Convert;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -86,10 +87,10 @@ public class ObstacleNavigator implements Runnable {
 
 	private void avoidObstacle() {
 		pilot.setTravelSpeed(TRAVEL_SPEED / 2);
-		Direction direction = scanner.getOpenDirection();
+		Direction direction = scanner.getOpenDirection((int) odom.getPose().getY());
 		while (direction == Direction.FORWARD) {
 			pilot.travel(-2);
-			direction = scanner.getOpenDirection();
+			direction = scanner.getOpenDirection((int) odom.getPose().getY());
 		}
 		Solver.debug("d=" + direction.toString());
 		
@@ -100,11 +101,11 @@ public class ObstacleNavigator implements Runnable {
 			pilot.rotate(360, true);
 		}
 		while (scanner.isObstacle());
-		pilot.stop();
 		float rotated = odom.getPose().getHeading() - start;
-		
-		pilot.rotate((90 * (direction == Direction.LEFT ? 1 : -1))  - odom.getPose().getHeading());
-		int heading = (int) odom.getPose().getHeading();
+		pilot.rotate((90 * (direction == Direction.LEFT ? 1 : -1)) - rotated - start);
+		pilot.arc(-20 * (rotated / 45), 90 * (direction == Direction.LEFT ? -1 : 1));
+		//pilot.travel(15.24 * (rotated / 45));
+		pilot.rotate(start - odom.getPose().getHeading());
 		
 		pilot.setTravelSpeed(TRAVEL_SPEED);
 		pilot.forward();
