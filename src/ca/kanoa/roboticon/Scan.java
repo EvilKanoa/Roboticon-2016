@@ -4,9 +4,9 @@ public class Scan {
 	
 	private long time;
 	private int angle;
-	private int color;
+	private float color;
 	
-	public Scan(long time, int angle, int color) {
+	public Scan(long time, int angle, float color) {
 		this.angle = angle;
 		this.color = color;
 	}
@@ -19,7 +19,7 @@ public class Scan {
 		return angle;
 	}
 
-	public int getColor() {
+	public float getColor() {
 		return color;
 	}
 

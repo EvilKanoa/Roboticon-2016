@@ -1,17 +1,15 @@
 package ca.kanoa.roboticon;
 
+import lejos.hardware.Sound;
 import lejos.hardware.sensor.EV3ColorSensor;
-import lejos.robotics.Color;
 import lejos.robotics.RegulatedMotor;
-import lejos.utility.Delay;
 
 public class Scanner {
 
 	private static final int ARM_SPEED = 400;
 	private static final int REVERSE_RANGE = 10;
 
-//	private static final double WHITE_MIN = 0.60d;
-//	private static final double BLACK_MAX = 0.20d;
+	private static final double WHITE_MIN = 0.35d;
 
 	private EV3ColorSensor sensor;
 	private RegulatedMotor motor;
@@ -25,7 +23,7 @@ public class Scanner {
 	}
 
 	public void calibrate() {
-		sensor.setCurrentMode("ColorID");
+		sensor.setCurrentMode("Red");
 
 		// calibrate positions
 		motor.setSpeed(ARM_SPEED);
@@ -56,22 +54,23 @@ public class Scanner {
 		return new Scan(System.currentTimeMillis(), getAngle(), read());
 	}
 	
-	public int read() {
-		//sensor.getRedMode().fetchSample(sample, 0);
-		return sensor.getColorID();
+	public float read() {
+		sensor.getRedMode().fetchSample(sample, 0);
+		return sample[0];
 	}
 
 	public boolean isObstacle() {
-		//return read() < WHITE_MIN;
-		return read() != Color.WHITE;
+		return read() < WHITE_MIN;
 	}
 
 	public Direction getOpenDirection(int horizontal) { 
-		int leftAngle, rightAngle;
+		int leftAngle = 0, rightAngle = 0;
 		
-		if (horizontal > 32) {
+		if (horizontal > 28) {
+			Sound.beep();
 			return Direction.RIGHT;
-		} else if (horizontal < -32) {
+		} else if (horizontal < -28) {
+			Sound.beep();
 			return Direction.LEFT;
 		}
 		

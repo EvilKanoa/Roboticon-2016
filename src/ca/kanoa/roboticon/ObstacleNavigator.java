@@ -1,12 +1,9 @@
 package ca.kanoa.roboticon;
 
-import ca.kanoa.roboticon.utility.Convert;
-import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
-import lejos.hardware.sensor.NXTUltrasonicSensor.DistanceMode;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.DifferentialPilot;
@@ -14,13 +11,13 @@ import lejos.robotics.navigation.DifferentialPilot;
 public class ObstacleNavigator implements Runnable {
 
 	private static final int TRAVEL_SPEED = 25;
-	private static final int ROTATE_SPEED = 45;
+	private static final int ROTATE_SPEED = 50;
+	private static final int ACCLERATION = 62;
 	private static final int MINIMUM_OBSTACLES_FOR_CORRECTION = 2;
 
 	private Scanner scanner;
 //	private WallNavigator wall;
 //	private List<Scan> scans;
-	private Thread thread;
 	private EV3LargeRegulatedMotor motorLeft, motorRight;
 	private EV3UltrasonicSensor ultrasonic;
 	private DifferentialPilot pilot;
@@ -34,7 +31,6 @@ public class ObstacleNavigator implements Runnable {
 		this.ultrasonic = ultrasonicSensor;
 //		wall = new WallNavigator(ultrasonicSensor);
 //		scans = new LinkedList<>();
-		thread = new Thread(this);
 
 		motorLeft = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
 		motorRight = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
@@ -51,11 +47,15 @@ public class ObstacleNavigator implements Runnable {
 			//scans.add(scanner.scan());
 			if (scanner.isObstacle()) {
 				pilot.quickStop();
-				Solver.debug("y="+odom.getPose().getX());
+				Solver.debug("y="+odom.getPose().getY());
 				avoidObstacle();
 			}
+			if (!pilot.isMoving()) {
+				pilot.forward();
+			}
 			if (!corrected && odom.getPose().getX() > 120) {
-				correctHeading();
+				//correctHeading();
+				corrected = true;
 			}
 		}
 	}
@@ -77,18 +77,17 @@ public class ObstacleNavigator implements Runnable {
 			
 			pilot.forward();
 		}
-		corrected = true;
 	}
 	
 	private float readDistence() {
 		ultrasonic.getDistanceMode().fetchSample(sample, 0);
-		return sample[0];
+		return sample[0] * 100;
 	}
 
 	private void avoidObstacle() {
 		pilot.setTravelSpeed(TRAVEL_SPEED / 2);
 		Direction direction = scanner.getOpenDirection((int) odom.getPose().getY());
-		while (direction == Direction.FORWARD) {
+		while (direction == Direction.FORWARD && scanner.isObstacle()) {
 			pilot.travel(-2);
 			direction = scanner.getOpenDirection((int) odom.getPose().getY());
 		}
@@ -101,23 +100,33 @@ public class ObstacleNavigator implements Runnable {
 			pilot.rotate(360, true);
 		}
 		while (scanner.isObstacle());
-		float rotated = odom.getPose().getHeading() - start;
-		pilot.rotate((90 * (direction == Direction.LEFT ? 1 : -1)) - rotated - start);
-		pilot.arc(-20 * (rotated / 45), 90 * (direction == Direction.LEFT ? -1 : 1));
-		//pilot.travel(15.24 * (rotated / 45));
+//		pilot.stop();
+//		pilot.steer(60 * (direction == Direction.LEFT ? 1 : -1), 50 * (direction == Direction.LEFT ? 1 : -1));
+		
+		float rotated = Math.abs(odom.getPose().getHeading() - start);
+		pilot.rotate(20 * (direction == Direction.LEFT ? 1 : -1));
+		pilot.arc((23 + (rotated / 2)) * (direction == Direction.LEFT ? -1 : 1), 75 * (direction == Direction.LEFT ? -1 : 1), true);
+		while (direction == Direction.LEFT ? odom.getPose().getHeading() > 0 : odom.getPose().getHeading() < 0);
+//		pilot.travel(10.16);
+		
 		pilot.rotate(start - odom.getPose().getHeading());
 		
 		pilot.setTravelSpeed(TRAVEL_SPEED);
+		float currX = odom.getPose().getX();
 		pilot.forward();
+		while (currX + 10 > odom.getPose().getX());
 		obstaclesAvoided++;
 	}
 
 	public void start() {
 		scanner.calibrate();
-		thread.start();
 		pilot.setTravelSpeed(TRAVEL_SPEED);
 		pilot.setRotateSpeed(ROTATE_SPEED);
-		pilot.forward();
+		pilot.setAcceleration(ACCLERATION);
+		pilot.reset();
+		while (true) {
+			this.run();
+		}
 	}
 
 }
