@@ -10,9 +10,9 @@ import lejos.robotics.navigation.DifferentialPilot;
 
 public class ObstacleNavigator implements Runnable {
 
-	private static final int TRAVEL_SPEED = 25;
-	private static final int ROTATE_SPEED = 50;
-	private static final int ACCLERATION = 62;
+	private static final int TRAVEL_SPEED = 30;
+	private static final int ROTATE_SPEED = 66;
+	private static final int ACCLERATION = 65;
 	private static final int MINIMUM_OBSTACLES_FOR_CORRECTION = 2;
 
 	private Scanner scanner;
@@ -104,7 +104,7 @@ public class ObstacleNavigator implements Runnable {
 //		pilot.steer(60 * (direction == Direction.LEFT ? 1 : -1), 50 * (direction == Direction.LEFT ? 1 : -1));
 		
 		float rotated = Math.abs(odom.getPose().getHeading() - start);
-		pilot.rotate(20 * (direction == Direction.LEFT ? 1 : -1));
+		pilot.rotate(22 * (direction == Direction.LEFT ? 1 : -1));
 		pilot.arc((23 + (rotated / 2)) * (direction == Direction.LEFT ? -1 : 1), 75 * (direction == Direction.LEFT ? -1 : 1), true);
 		while (direction == Direction.LEFT ? odom.getPose().getHeading() > 0 : odom.getPose().getHeading() < 0);
 //		pilot.travel(10.16);
