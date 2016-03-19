@@ -5,6 +5,7 @@ import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
+import lejos.hardware.sensor.NXTUltrasonicSensor.DistanceMode;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.navigation.DifferentialPilot;
@@ -20,13 +21,16 @@ public class ObstacleNavigator implements Runnable {
 //	private List<Scan> scans;
 	private Thread thread;
 	private EV3LargeRegulatedMotor motorLeft, motorRight;
+	private EV3UltrasonicSensor ultrasonic;
 	private DifferentialPilot pilot;
 	private OdometryPoseProvider odom;
 	private int obstaclesAvoided;
 	private boolean corrected;
+	float[] sample;
 
 	public ObstacleNavigator(EV3ColorSensor colorSensor, RegulatedMotor armMotor, EV3UltrasonicSensor ultrasonicSensor) {
 		this.scanner = new Scanner(colorSensor, armMotor);
+		this.ultrasonic = ultrasonicSensor;
 //		wall = new WallNavigator(ultrasonicSensor);
 //		scans = new LinkedList<>();
 		thread = new Thread(this);
@@ -36,6 +40,7 @@ public class ObstacleNavigator implements Runnable {
 		pilot = new DifferentialPilot(5.6, 13.47, motorLeft, motorRight, false);
 		odom = new OdometryPoseProvider(pilot);
 		obstaclesAvoided = 0;
+		sample = new float[3];
 	}
 
 	@Override
@@ -57,12 +62,26 @@ public class ObstacleNavigator implements Runnable {
 	private void correctHeading() {
 		if (obstaclesAvoided >= MINIMUM_OBSTACLES_FOR_CORRECTION) {
 			pilot.stop();
-			Sound.twoBeeps();
+			pilot.setRotateSpeed(ROTATE_SPEED / 4);
+			pilot.rotate(20);
+			pilot.rotate(-40, true);
+			
+			float lastRead = readDistence();
+			while (readDistence() < lastRead) {
+				lastRead = readDistence();
+			}
+			pilot.quickStop();
+			Solver.debug("rot d = " + odom.getPose().getHeading());
+			odom.getPose().setHeading(0);
+			
 			pilot.forward();
-		} else {
-			Sound.beep();
 		}
 		corrected = true;
+	}
+	
+	private float readDistence() {
+		ultrasonic.getDistanceMode().fetchSample(sample, 0);
+		return sample[0];
 	}
 
 	private void avoidObstacle() {
@@ -82,8 +101,11 @@ public class ObstacleNavigator implements Runnable {
 		}
 		while (scanner.isObstacle());
 		pilot.stop();
-		pilot.steer(60 * (direction == Direction.LEFT ? 1 : -1), 50 * (direction == Direction.LEFT ? 1 : -1));
-		pilot.rotate(start - odom.getPose().getHeading());
+		float rotated = odom.getPose().getHeading() - start;
+		
+		pilot.rotate((90 * (direction == Direction.LEFT ? 1 : -1))  - odom.getPose().getHeading());
+		int heading = (int) odom.getPose().getHeading();
+		
 		pilot.setTravelSpeed(TRAVEL_SPEED);
 		pilot.forward();
 		obstaclesAvoided++;
