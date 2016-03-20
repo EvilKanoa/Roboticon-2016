@@ -1,4 +1,4 @@
-package ca.kanoa.roboticon;
+package ca.kanoa.roboticon.one;
 
 import lejos.hardware.Button;
 

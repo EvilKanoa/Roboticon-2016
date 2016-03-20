@@ -10,4 +10,12 @@ public class Convert {
 		return meter * 3.28084;
 	}
 	
+	public static double centimeterToInch(double centimeter) {
+		return centimeter * 0.393701;
+	}
+	
+	public static double inchToCentimeter(double inch) {
+		return inch * 2.54;
+	}
+	
 }

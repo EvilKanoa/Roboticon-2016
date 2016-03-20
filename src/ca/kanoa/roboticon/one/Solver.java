@@ -1,11 +1,11 @@
-package ca.kanoa.roboticon;
+package ca.kanoa.roboticon.one;
 
-import ca.kanoa.roboticon.Logger.Level;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
+import ca.kanoa.roboticon.one.Logger.Level;
 import lejos.hardware.Button;
 
 public class Solver {
