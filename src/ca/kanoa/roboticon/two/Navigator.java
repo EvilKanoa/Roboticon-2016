@@ -3,10 +3,11 @@ package ca.kanoa.roboticon.two;
 import ca.kanoa.roboticon.one.Direction;
 import ca.kanoa.roboticon.utility.Convert;
 import ca.kanoa.roboticon.utility.MotionController;
-import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.robotics.navigation.DifferentialPilot;
+import lejos.utility.Delay;
+import lejos.utility.Stopwatch;
 
 public class Navigator extends MotionController {
 
@@ -14,28 +15,21 @@ public class Navigator extends MotionController {
 	private EV3UltrasonicSensor sonar;
 	private float[] sample;
 	private Direction heading;
+	private boolean firstSweep;
+	public Stopwatch timer;
 	
 	public Navigator(DifferentialPilot pilot) {
 		super(pilot);
 		stage = NavigatorStage.START_TO_WALL;
-		sample = new float[3];
+		sample = new float[1];
+		firstSweep = true;
+		timer = new Stopwatch();
 	}
 	
 	@Override
 	public void start() {
 		sonar = new EV3UltrasonicSensor(LocalEV3.get().getPort(ChallengeTwo.SONAR_PORT));
-		sonar.setCurrentMode("Distence");
-		while (true) {
-			test();
-			while (Button.ENTER.isUp());
-		}
-	}
-
-	private void test() {
-		pilot.steer(100, 90);
-		pilot.steer(-100, -90);
-		pilot.steer(100, -90);
-		pilot.steer(-100, 90);
+		heading = Direction.FORWARD;
 	}
 
 	@Override
@@ -59,12 +53,16 @@ public class Navigator extends MotionController {
 	private void sweepBackward() {
 		if (!pilot.isMoving()) {
 			pilot.backward();
+			firstSweep = false;
+			timer.reset();
 		}
-		if (readSonar() + ChallengeTwo.SONAR_DISPLACEMENT > 64) {
-			pilot.steer(100, 90);
-			pilot.steer(-100, -90);
-			pilot.steer(100, -90);
-			pilot.steer(-100, 90);
+		if (readSonar() > 56 || pilot.isStalled() || timer.elapsed() > 6000) {
+			Delay.msDelay(1000);
+			pilot.quickStop();
+			pilot.steer(90, ChallengeTwo.POINT_ANGLE + 8);
+			pilot.steer(-100, -ChallengeTwo.POINT_ANGLE);
+			pilot.steer(100, -ChallengeTwo.POINT_ANGLE);
+			pilot.steer(-100, ChallengeTwo.POINT_ANGLE);
 			heading = Direction.FORWARD;
 			stage = NavigatorStage.SWEEPING_FORWARD;
 		}
@@ -73,12 +71,14 @@ public class Navigator extends MotionController {
 	private void sweepForward() {
 		if (!pilot.isMoving()) {
 			pilot.forward();
+			timer.reset();
 		}
-		if (readSonar() + ChallengeTwo.SONAR_DISPLACEMENT < 8) {
-			pilot.steer(100, 90);
-			pilot.steer(-100, -90);
-			pilot.steer(100, -90);
-			pilot.steer(-100, 90);
+		if (readSonar() < 8 || pilot.isStalled() || timer.elapsed() > 5500) {
+			pilot.quickStop();
+			pilot.steer(100, -ChallengeTwo.POINT_ANGLE);
+			pilot.steer(-100, ChallengeTwo.POINT_ANGLE);
+			pilot.steer(100, ChallengeTwo.POINT_ANGLE);
+			pilot.steer(-100, -ChallengeTwo.POINT_ANGLE);
 			heading = Direction.BACKWARD;
 			stage = NavigatorStage.SWEEPING_BACKWARD;
 		}
@@ -88,8 +88,8 @@ public class Navigator extends MotionController {
 		if (!pilot.isMoving()) {
 			moveNext();
 		}
-		if (heading == Direction.FORWARD ? readSonar() > ChallengeTwo.TOUCH_DISTANCE : 
-			readSonar() < 72 - (ChallengeTwo.TOUCH_DISTANCE + ChallengeTwo.SONAR_DISPLACEMENT)) {
+		if (heading == Direction.FORWARD ? readSonar() < 8 : readSonar() > 64) {
+			pilot.quickStop();
 			pilot.rotate(90 * (heading == Direction.FORWARD ? 1 : -1));
 			heading = heading == Direction.FORWARD ? Direction.BACKWARD : Direction.FORWARD;
 			stage = heading == Direction.FORWARD ? NavigatorStage.SWEEPING_FORWARD : NavigatorStage.SWEEPING_BACKWARD;
@@ -100,15 +100,20 @@ public class Navigator extends MotionController {
 		if (!pilot.isMoving()) {
 			pilot.forward();
 		}
-		if (readSonar() <= ChallengeTwo.TOUCH_DISTANCE) {
+		if (readSonar() < 9) {
+			pilot.quickStop();
 			pilot.rotate(-90);
-			if ((readSonar() + ChallengeTwo.SONAR_DISPLACEMENT) > 36) {
+			if (readSonar() > 34) {
 				heading = Direction.BACKWARD;
 			} else {
 				heading = Direction.FORWARD;
 			}
 			stage = NavigatorStage.WALL_TO_CORNER;
 		}
+	}
+	
+	public boolean isFirstSweep() {
+		return firstSweep;
 	}
 	
 	private void moveNext() {
@@ -129,7 +134,7 @@ public class Navigator extends MotionController {
 	 * @return the distance of an object from the sonar in inches	
 	 */
 	public double readSonar() {
-		sonar.fetchSample(sample, 0);
+		sonar.getDistanceMode().fetchSample(sample, 0);
 		return Convert.centimeterToInch(sample[0] * 100);
 	}
 	

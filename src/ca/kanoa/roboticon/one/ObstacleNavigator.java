@@ -15,22 +15,22 @@ public class ObstacleNavigator implements Runnable {
 	private static final int ROTATE_SPEED = 50;
 	private static final int ACCLERATION = 70;
 	private static final int STEER_RATE = 60;
-	private static final int MINIMUM_OBSTACLES_FOR_CORRECTION = 2;
+//	private static final int MINIMUM_OBSTACLES_FOR_CORRECTION = 2;
 
 	private Scanner scanner;
 //	private WallNavigator wall;
 //	private List<Scan> scans;
 	private EV3LargeRegulatedMotor motorLeft, motorRight;
-	private EV3UltrasonicSensor ultrasonic;
+//	private EV3UltrasonicSensor ultrasonic;
 	private DifferentialPilot pilot;
 	private OdometryPoseProvider odom;
-	private int obstaclesAvoided;
+//	private int obstaclesAvoided;
 	private boolean corrected;
 	float[] sample;
 
 	public ObstacleNavigator(EV3ColorSensor colorSensor, RegulatedMotor armMotor, EV3UltrasonicSensor ultrasonicSensor) {
 		this.scanner = new Scanner(colorSensor, armMotor);
-		this.ultrasonic = ultrasonicSensor;
+//		this.ultrasonic = ultrasonicSensor;
 //		wall = new WallNavigator(ultrasonicSensor);
 //		scans = new LinkedList<>();
 
@@ -38,7 +38,7 @@ public class ObstacleNavigator implements Runnable {
 		motorRight = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
 		pilot = new DifferentialPilot(5.6, 13.47, motorLeft, motorRight, false);
 		odom = new OdometryPoseProvider(pilot);
-		obstaclesAvoided = 0;
+//		obstaclesAvoided = 0;
 		sample = new float[3];
 	}
 
@@ -62,29 +62,29 @@ public class ObstacleNavigator implements Runnable {
 		}
 	}
 
-	private void correctHeading() {
-		if (obstaclesAvoided >= MINIMUM_OBSTACLES_FOR_CORRECTION) {
-			pilot.stop();
-			pilot.setRotateSpeed(ROTATE_SPEED / 4);
-			pilot.rotate(20);
-			pilot.rotate(-40, true);
-			
-			float lastRead = readDistence();
-			while (readDistence() < lastRead) {
-				lastRead = readDistence();
-			}
-			pilot.quickStop();
-			Solver.debug("rot d = " + odom.getPose().getHeading());
-			odom.getPose().setHeading(0);
-			
-			pilot.forward();
-		}
-	}
+//	private void correctHeading() {
+//		if (obstaclesAvoided >= MINIMUM_OBSTACLES_FOR_CORRECTION) {
+//			pilot.stop();
+//			pilot.setRotateSpeed(ROTATE_SPEED / 4);
+//			pilot.rotate(20);
+//			pilot.rotate(-40, true);
+//			
+//			float lastRead = readDistence();
+//			while (readDistence() < lastRead) {
+//				lastRead = readDistence();
+//			}
+//			pilot.quickStop();
+//			Solver.debug("rot d = " + odom.getPose().getHeading());
+//			odom.getPose().setHeading(0);
+//			
+//			pilot.forward();
+//		}
+//	}
 	
-	private float readDistence() {
-		ultrasonic.getDistanceMode().fetchSample(sample, 0);
-		return sample[0] * 100;
-	}
+//	private float readDistence() {
+//		ultrasonic.getDistanceMode().fetchSample(sample, 0);
+//		return sample[0] * 100;
+//	}
 
 	private void avoidObstacle() {
 		pilot.setTravelSpeed(TRAVEL_SPEED / 2);
@@ -129,7 +129,7 @@ public class ObstacleNavigator implements Runnable {
 		float currX = odom.getPose().getX();
 		pilot.forward();
 		while (currX + 6 > odom.getPose().getX());
-		obstaclesAvoided++;
+//		obstaclesAvoided++;
 	}
 
 	public void start() {

@@ -1,6 +1,5 @@
 package ca.kanoa.roboticon.one;
 
-import lejos.hardware.Sound;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.robotics.RegulatedMotor;
 

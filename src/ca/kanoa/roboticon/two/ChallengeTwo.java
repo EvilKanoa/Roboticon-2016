@@ -4,22 +4,25 @@ import ca.kanoa.roboticon.one.ExitListener;
 import ca.kanoa.roboticon.one.Logger;
 import ca.kanoa.roboticon.one.Logger.Level;
 import ca.kanoa.roboticon.utility.Convert;
+import lejos.hardware.Button;
+import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.robotics.navigation.DifferentialPilot;
+import lejos.utility.Delay;
 
 public class ChallengeTwo {
 
 	public static final String 		COLOR_PORT 			= "S3";
-	public static final String 		SONAR_PORT 			= "S1";
-	public static final double		TOUCH_DISTANCE		= 6.0;
-	public static final double		SONAR_DISPLACEMENT 	= 4.0;
+	public static final String 		SONAR_PORT 			= "S2";
+	public static final int			POINT_ANGLE			= 65;
 	
-	private static final double 	TRAVEL_SPEED 	= 60;
-	private static final double 	ROTATE_SPEED 	= 30;
-	private static final int 		ACCELERATION 	= 50;
-	private static final int 		TRACK_WIDTH 	= 7;
-	private static final boolean 	MOTORS_REVERSED = true;
+	public static final double 		TRAVEL_SPEED 		= 50;
+	public static final double 		ROTATE_SPEED 		= 120;
+	private static final int 		ACCELERATION 		= 70;
+	private static final double		TRACK_WIDTH 		= 18.50;
+	private static final boolean 	MOTORS_REVERSED 	= false;
+	private static final double		DRIFT_CORRECTION	= -0.0;
 	
 	private static ChallengeTwo program;
 	
@@ -32,7 +35,8 @@ public class ChallengeTwo {
 	public ChallengeTwo() {
 		exitListener = new Thread(new ExitListener());
 		logger = new Logger(Level.DEBUG, false);
-		pilot = new DifferentialPilot(Convert.centimeterToInch(5.60), TRACK_WIDTH, 
+		pilot = new DifferentialPilot(Convert.centimeterToInch(5.65), Convert.centimeterToInch(5.65 + DRIFT_CORRECTION), 
+				Convert.centimeterToInch(TRACK_WIDTH), 
 				new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A")), 
 				new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D")), MOTORS_REVERSED);
 		navigator = new Navigator(pilot);
@@ -42,6 +46,10 @@ public class ChallengeTwo {
 	public static void main(String[] args) {
 		program = new ChallengeTwo();
 		program.start();
+		Sound.beep();
+		program.logger.warning("press start");
+		while (Button.ENTER.isUp());
+		Delay.msDelay(500);
 		while (true) {
 			program.update();
 		}
@@ -50,6 +58,7 @@ public class ChallengeTwo {
 	private void update() {
 		avoider.update();
 		navigator.update();
+		Delay.msDelay(50);
 	}
 
 	private void start() {

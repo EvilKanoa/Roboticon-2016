@@ -10,7 +10,7 @@ public abstract class MotionController {
 	
 	public MotionController(DifferentialPilot pilot) {
 		this.pilot = pilot;
-		pilot.addMoveListener(odometry);
+		odometry = new OdometryPoseProvider(pilot);
 	}
 	
 	public DifferentialPilot getPilot() {

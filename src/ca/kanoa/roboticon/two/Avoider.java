@@ -8,7 +8,7 @@ import lejos.robotics.navigation.DifferentialPilot;
 
 public class Avoider extends MotionController {
 
-	private static final double WHITE_MIN = 0.70d;
+	private static final double WHITE_MIN = 0.45d;
 	private static final double BLACK_MAX = 0.20d;
 	
 	private EV3ColorSensor color;
@@ -35,19 +35,60 @@ public class Avoider extends MotionController {
 	private void passObstacle() {
 		pilot.quickStop();
 		odometry.getPose().setHeading(0);
+		pilot.setRotateSpeed(ChallengeTwo.ROTATE_SPEED / 2);
+		pilot.setTravelSpeed(ChallengeTwo.TRAVEL_SPEED / 2);
+//		if (ChallengeTwo.getNavigator().getHeading() == Direction.FORWARD) {
+//			pilot.backward();
+//			while (onFriendly()) {
+//				Delay.msDelay(10);
+//			}
+//			pilot.quickStop();
+//			pilot.travel(1);
+//			pilot.rotate(-360, true);
+//			while (onFriendly()) {
+//				Delay.msDelay(10);
+//			}
+//			pilot.quickStop();
+//			pilot.arc(8, -odometry.getPose().getHeading() + 90);
+//			pilot.rotate(-90);
+//		} else {
+//			pilot.forward();
+//			while (onFriendly()) {
+//				Delay.msDelay(10);
+//			}
+//			pilot.quickStop();
+//			pilot.travel(1);
+//			pilot.quickStop();
+//			pilot.rotate(360, true);
+//			while (!onFriendly()) {
+//				Delay.msDelay(10);
+//			}
+//			pilot.quickStop();
+//			pilot.arc(8, odometry.getPose().getHeading() + 90);
+//			pilot.rotate(90);
+//		}
+		
 		if (ChallengeTwo.getNavigator().getHeading() == Direction.FORWARD) {
-			pilot.travel(1);
-			pilot.rotateRight();
-			while (onFriendly());
-			pilot.arc(13, -odometry.getPose().getHeading() + 90);
+			pilot.travel(-5);
 			pilot.rotate(-90);
+			pilot.stop();
+			pilot.arc(6, 150);
+			pilot.stop();
+			pilot.rotate(-60);
+			pilot.travel(4);
 		} else {
-			pilot.travel(-2);
-			pilot.rotateLeft();
-			while (!onFriendly());
-			pilot.arc(13, odometry.getPose().getHeading() + 90);
-			pilot.rotate(90);
+			pilot.travel(8);
+			pilot.rotate(-90);
+			pilot.stop();
+			pilot.arc(6, -150);
+			pilot.stop();
+			pilot.rotate(-60);
+			pilot.travel(-4);
 		}
+		
+		pilot.setRotateSpeed(ChallengeTwo.ROTATE_SPEED);
+		pilot.setTravelSpeed(ChallengeTwo.TRAVEL_SPEED);
+		ChallengeTwo.getNavigator().timer.reset();
 	}
 
 	public boolean onFriendly() {
