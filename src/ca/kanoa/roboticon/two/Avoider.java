@@ -13,6 +13,7 @@ public class Avoider extends MotionController {
 	
 	private EV3ColorSensor color;
 	private float[] sample;
+	private float lastSample;
 	
 	public Avoider(DifferentialPilot pilot) {
 		super(pilot);
@@ -35,23 +36,33 @@ public class Avoider extends MotionController {
 	private void passObstacle() {
 		pilot.quickStop();
 		odometry.getPose().setHeading(0);
-		pilot.setRotateSpeed(ChallengeTwo.ROTATE_SPEED / 2);
-		pilot.setTravelSpeed(ChallengeTwo.TRAVEL_SPEED / 2);
-//		if (ChallengeTwo.getNavigator().getHeading() == Direction.FORWARD) {
-//			pilot.backward();
-//			while (onFriendly()) {
-//				Delay.msDelay(10);
-//			}
-//			pilot.quickStop();
-//			pilot.travel(1);
+		if (ChallengeTwo.getNavigator().getHeading() == Direction.FORWARD) {
+			pilot.travel(-4);
+			pilot.rotate(-90);
+			pilot.travel(10);
+			pilot.rotate(90);
+			pilot.travel(16);
+			pilot.rotate(90);
+			pilot.travel(10);
+			pilot.rotate(-90);
+//			pilot.stop();
+//			pilot.travel(-1);
 //			pilot.rotate(-360, true);
 //			while (onFriendly()) {
-//				Delay.msDelay(10);
+//				Delay.msDelay(5);
 //			}
-//			pilot.quickStop();
-//			pilot.arc(8, -odometry.getPose().getHeading() + 90);
+//			pilot.stop();
+//			pilot.arc(6, -odometry.getPose().getHeading() + 90);
 //			pilot.rotate(-90);
-//		} else {
+		} else {
+			pilot.travel(8);
+			pilot.rotate(-90);
+			pilot.travel(-10);
+			pilot.rotate(90);
+			pilot.travel(-16);
+			pilot.rotate(90);
+			pilot.travel(-10);
+			pilot.rotate(-90);
 //			pilot.forward();
 //			while (onFriendly()) {
 //				Delay.msDelay(10);
@@ -64,36 +75,23 @@ public class Avoider extends MotionController {
 //				Delay.msDelay(10);
 //			}
 //			pilot.quickStop();
-//			pilot.arc(8, odometry.getPose().getHeading() + 90);
+//			pilot.arc(9, odometry.getPose().getHeading() + 90);
 //			pilot.rotate(90);
-//		}
-		
-		if (ChallengeTwo.getNavigator().getHeading() == Direction.FORWARD) {
-			pilot.travel(-5);
-			pilot.rotate(-90);
-			pilot.stop();
-			pilot.arc(6, 150);
-			pilot.stop();
-			pilot.rotate(-60);
-			pilot.travel(4);
-		} else {
-			pilot.travel(8);
-			pilot.rotate(-90);
-			pilot.stop();
-			pilot.arc(6, -150);
-			pilot.stop();
-			pilot.rotate(-60);
-			pilot.travel(-4);
 		}
 		
-		pilot.setRotateSpeed(ChallengeTwo.ROTATE_SPEED);
 		pilot.setTravelSpeed(ChallengeTwo.TRAVEL_SPEED);
 		ChallengeTwo.getNavigator().timer.reset();
 	}
 
 	public boolean onFriendly() {
 		float reading = readColor();
-		return reading < WHITE_MIN && reading > BLACK_MAX;
+		if (reading < WHITE_MIN && reading > BLACK_MAX && lastSample < WHITE_MIN && lastSample > BLACK_MAX) {
+			lastSample = reading;
+			return true;
+		} else {
+			lastSample = reading;
+			return false;
+		}
 	}
 	
 	/**

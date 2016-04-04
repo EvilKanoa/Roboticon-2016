@@ -15,12 +15,12 @@ public class ChallengeTwo {
 
 	public static final String 		COLOR_PORT 			= "S3";
 	public static final String 		SONAR_PORT 			= "S2";
-	public static final int			POINT_ANGLE			= 65;
+	public static final int			POINT_ANGLE			= 55;
 	
-	public static final double 		TRAVEL_SPEED 		= 50;
-	public static final double 		ROTATE_SPEED 		= 120;
-	private static final int 		ACCELERATION 		= 70;
-	private static final double		TRACK_WIDTH 		= 18.50;
+	public static final double 		TRAVEL_SPEED 		= 8.3;
+	public static final double 		ROTATE_SPEED 		= 50;
+	private static final int 		ACCELERATION 		= 20;
+	private static final double		TRACK_WIDTH 		= 16.00;
 	private static final boolean 	MOTORS_REVERSED 	= false;
 	private static final double		DRIFT_CORRECTION	= -0.0;
 	
@@ -35,7 +35,7 @@ public class ChallengeTwo {
 	public ChallengeTwo() {
 		exitListener = new Thread(new ExitListener());
 		logger = new Logger(Level.DEBUG, false);
-		pilot = new DifferentialPilot(Convert.centimeterToInch(5.65), Convert.centimeterToInch(5.65 + DRIFT_CORRECTION), 
+		pilot = new DifferentialPilot(Convert.centimeterToInch(5.6), Convert.centimeterToInch(5.6 + DRIFT_CORRECTION), 
 				Convert.centimeterToInch(TRACK_WIDTH), 
 				new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A")), 
 				new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D")), MOTORS_REVERSED);
@@ -49,16 +49,20 @@ public class ChallengeTwo {
 		Sound.beep();
 		program.logger.warning("press start");
 		while (Button.ENTER.isUp());
-		Delay.msDelay(500);
+		Delay.msDelay(800);
 		while (true) {
 			program.update();
 		}
 	}
 
 	private void update() {
+//		if (!pilot.isMoving()) {
+//			while (Button.ENTER.isUp());
+//			pilot.backward();
+//		}
 		avoider.update();
 		navigator.update();
-		Delay.msDelay(50);
+		Delay.msDelay(30);
 	}
 
 	private void start() {
